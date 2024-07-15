@@ -1,87 +1,70 @@
 import React, { useState, useContext } from 'react';
-import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import axios from 'axios';
-import AuthContext from '../context/AuthContext';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import { AuthContext } from '../context/AuthContext';
+import { TextField, Button, Box, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
+
 const ChangePassword = () => {
-  const [currentPassword, setCurrentPassword] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const { user, snackbar, handleSnackbarClose } = useContext(AuthContext);
+  const [error, setError] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const { changePassword } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post('http://localhost:8000/api/change-password/', {
-        old_password: currentPassword,
-        new_password: newPassword,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-
-      if (response.data.status === 'password set') {
-        handleSnackbarClose({
-          open: true,
-          message: 'Password changed successfully!',
-          severity: 'success',
-        });
-        navigate('/');
-      } else {
-        handleSnackbarClose({
-          open: true,
-          message: 'Failed to change password!',
-          severity: 'error',
-        });
-      }
-    } catch (err) {
-      handleSnackbarClose({
-        open: true,
-        message: 'Failed to change password!',
-        severity: 'error',
-      });
-      console.error(err);
+    const result = await changePassword(oldPassword, newPassword);
+    if (result.success) {
+      setSnackbarMessage(result.message);
+      setSnackbarSeverity('success');
+      navigate('/');
+    } else {
+      setError(result.message);
+      setSnackbarMessage(result.message);
+      setSnackbarSeverity('error');
     }
+    setSnackbarOpen(true);
+  };
+ 
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
-    <Container>
-      <Box sx={{ mt: 5 }}>
-        <Typography variant="h4" gutterBottom>
+    <Box sx={{ width: 300, margin: '0 auto', marginTop: 10 }}>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          type="password"
+          label="Old Password"
+          fullWidth
+          value={oldPassword}
+          onChange={(e) => setOldPassword(e.target.value)}
+          error={!!error}
+          helperText={error}
+          sx={{ marginBottom: 2 }}
+        />
+        <TextField
+          type="password"
+          label="New Password"
+          fullWidth
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
+        <Button type="submit" variant="contained" color="primary" fullWidth>
           Change Password
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Current Password"
-            type="password"
-            margin="normal"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="New Password"
-            type="password"
-            margin="normal"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <Button variant="contained" color="primary" type="submit">
-            Change Password
-          </Button>
-        </form>
-        <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => handleSnackbarClose({ ...snackbar, open: false })}>
-          <Alert onClose={() => handleSnackbarClose({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </Container>
+        </Button>
+      </form>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

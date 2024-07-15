@@ -1,62 +1,72 @@
-// src/components/Register.js
 import React, { useState, useContext } from 'react';
-import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import AuthContext from '../context/AuthContext';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import { AuthContext } from '../context/AuthContext';
+import { TextField, Button, Box, Snackbar, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
-const Register = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { register, snackbar, handleSnackbarClose } = useContext(AuthContext);
+const ChangePassword = () => {
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [error, setError] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const { changePassword } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await register(username, email, password);
+    const result = await changePassword(oldPassword, newPassword);
+    if (result.success) {
+      setSnackbarMessage(result.message);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setTimeout(() => {
+        navigate('');
+      }, 1000); // Redirect after 2 seconds
+    } else {
+      setError(result.message);
+      setSnackbarMessage(result.message);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
-    <Container>
-      <Box sx={{ mt: 5 }}>
-        <Typography variant="h4" gutterBottom>
-          Register
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Username"
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button variant="contained" color="primary" type="submit">
-            Register
-          </Button>
-        </form>
-        <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose}>
-          <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </Container>
+    <Box sx={{ width: 300, margin: '0 auto', marginTop: 10 }}>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          type="password"
+          label="Old Password"
+          fullWidth
+          value={oldPassword}
+          onChange={(e) => setOldPassword(e.target.value)}
+          error={!!error}
+          helperText={error}
+          sx={{ marginBottom: 2 }}
+        />
+        <TextField
+          type="password"
+          label="New Password"
+          fullWidth
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
+        <Button type="submit" variant="contained" color="primary" fullWidth>
+          Change Password
+        </Button>
+      </form>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 
-export default Register;
+export default ChangePassword;

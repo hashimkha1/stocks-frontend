@@ -83,7 +83,7 @@ const StockList = () => {
   }, [criteria, displayResults, selectedFormula, grtSalesFilter]);
 
   const fetchData = () => {
-    axios.get('http://localhost:8000/api/stocks/')
+    axios.get('https://discipleshiptrails.com/backend/api/stocks/')
       .then(response => {
         setStocks(response.data);
         setFilteredStocks(response.data);
@@ -92,7 +92,7 @@ const StockList = () => {
   };
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:8000/api/stocks/${id}/`)
+    axios.delete(`https://discipleshiptrails.com/backend/api/stocks/${id}/`)
       .then(() => {
         fetchData();
         if (selectedStock && selectedStock.id === id) {
@@ -181,7 +181,7 @@ const StockList = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedStock) {
-      axios.put(`http://localhost:8000/api/stocks/${selectedStock.id}/`, formData)
+      axios.put(`https://discipleshiptrails.com/backend/api/stocks/${selectedStock.id}/`, formData)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -196,7 +196,7 @@ const StockList = () => {
           setSnackbarOpen(true);
         });
     } else {
-      axios.post('http://localhost:8000/api/stocks/', formData)
+      axios.post('https://discipleshiptrails.com/backend/api/stocks/', formData)
         .then(response => {
           fetchData();
           setOpen(false);
