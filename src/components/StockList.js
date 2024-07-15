@@ -19,11 +19,13 @@ import {
   DialogContent,
   DialogTitle,
   Fab,
-  IconButton
+  IconButton,
+  Snackbar
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import MuiAlert from '@mui/material/Alert';
 
 const sortingFormulas = {
   'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv / 3)).toFixed(2),
@@ -43,6 +45,10 @@ const defaultCriteria = {
   minSales: 10,
   minEYPercentage: 4,
 };
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const StockList = () => {
   const [stocks, setStocks] = useState([]);
@@ -64,6 +70,9 @@ const StockList = () => {
     ey_percentage: 0
   });
   const [selectedStock, setSelectedStock] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   useEffect(() => {
     fetchData();
@@ -90,8 +99,16 @@ const StockList = () => {
           setSelectedStock(null);
           setOpen(false);
         }
+        setSnackbarMessage('Stock deleted successfully');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
       })
-      .catch(error => console.error(error));
+      .catch(error => {
+        console.error(error);
+        setSnackbarMessage('Failed to delete stock');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      });
   };
 
   const applyFiltersAndSorting = () => {
@@ -168,15 +185,31 @@ const StockList = () => {
         .then(response => {
           fetchData();
           setOpen(false);
+          setSnackbarMessage('Stock updated successfully');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+          console.error(error);
+          setSnackbarMessage('Failed to update stock');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        });
     } else {
       axios.post('http://localhost:8000/api/stocks/', formData)
         .then(response => {
           fetchData();
           setOpen(false);
+          setSnackbarMessage('Stock added successfully');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+          console.error(error);
+          setSnackbarMessage('Failed to add stock');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        });
     }
   };
 
@@ -184,6 +217,13 @@ const StockList = () => {
     setSelectedStock(params.row);
     setFormData(params.row);
     setOpen(true);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
   };
 
   const columns = [
@@ -425,6 +465,11 @@ const StockList = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
