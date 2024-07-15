@@ -62,6 +62,8 @@ const StockList = () => {
   useEffect(() => {
     applyFiltersAndSorting();
   }, [criteria, displayResults, selectedFormula, grtSalesFilter]);
+  // https://discipleshiptrails.com/backend/api/stocks/
+
 
   const fetchData = () => {
     axios.get('http://localhost:8000/api/stocks/')

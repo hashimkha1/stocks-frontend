@@ -25,7 +25,7 @@ const AddStock = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post('http://localhost:8000/api/stocks/', formData)
+    axios.post('https://discipleshiptrails.com/backend/api/stocks/', formData)
       .then(response => {
         console.log(response.data);
         setOpen(false);

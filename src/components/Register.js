@@ -1,25 +1,26 @@
-// src/components/Login.js
+// src/components/Register.js
 import React, { useState, useContext } from 'react';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
 import AuthContext from '../context/AuthContext';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-const Login = () => {
+const Register = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, snackbar, handleSnackbarClose } = useContext(AuthContext);
+  const { register, snackbar, handleSnackbarClose } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(username, password);
+    await register(username, email, password);
   };
 
   return (
     <Container>
       <Box sx={{ mt: 5 }}>
         <Typography variant="h4" gutterBottom>
-          Login
+          Register
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
@@ -31,6 +32,13 @@ const Login = () => {
           />
           <TextField
             fullWidth
+            label="Email"
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            fullWidth
             label="Password"
             type="password"
             margin="normal"
@@ -38,7 +46,7 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
           <Button variant="contained" color="primary" type="submit">
-            Login
+            Register
           </Button>
         </form>
         <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose}>
@@ -51,4 +59,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

@@ -1,5 +1,6 @@
 {
   "name": "stock-sorter-frontend",
+  "homepage": "https://discipleshiptrails.com/stocks",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -9,6 +10,7 @@
     "@mui/material": "^5.16.0",
     "@mui/x-data-grid": "^7.10.0",
     "axios": "^1.7.2",
+    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.24.1",
