@@ -26,18 +26,28 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 const sortingFormulas = {
-  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv/ 3) ).toFixed(2),
-  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci/ 3) ).toFixed(2),
-  'RS+RS+RT/3': (stock) => ((stock.rs + stock.rs + stock.rt/ 3) ).toFixed(2),
-  'RS+RV/2': (stock) => ((stock.rs + stock.rv/ 2) ).toFixed(2),
-  'RS+CI/2': (stock) => ((stock.rs + stock.ci/ 2) ).toFixed(2),
-  'RS+RT/2': (stock) => ((stock.rs + stock.rt/ 2) ).toFixed(2)
+  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv / 3)).toFixed(2),
+  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci / 3)).toFixed(2),
+  'RS+RS+RT/3': (stock) => ((stock.rs + stock.rs + stock.rt / 3)).toFixed(2),
+  'RS+RV/2': (stock) => ((stock.rs + stock.rv / 2)).toFixed(2),
+  'RS+CI/2': (stock) => ((stock.rs + stock.ci / 2)).toFixed(2),
+  'RS+RT/2': (stock) => ((stock.rs + stock.rt / 2)).toFixed(2)
+};
+
+const defaultCriteria = {
+  minRS: 1.3,
+  minRV: 1.3,
+  minCI: 1.3,
+  minRT: 1,
+  minGRT: 10,
+  minSales: 10,
+  minEYPercentage: 4,
 };
 
 const StockList = () => {
   const [stocks, setStocks] = useState([]);
   const [displayResults, setDisplayResults] = useState(10);
-  const [criteria, setCriteria] = useState({});
+  const [criteria, setCriteria] = useState(defaultCriteria);
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [selectedFormula, setSelectedFormula] = useState('RS+RS+RV/3');
   const [grtSalesFilter, setGrtSalesFilter] = useState(false);
@@ -62,8 +72,6 @@ const StockList = () => {
   useEffect(() => {
     applyFiltersAndSorting();
   }, [criteria, displayResults, selectedFormula, grtSalesFilter]);
-  // https://discipleshiptrails.com/backend/api/stocks/
-
 
   const fetchData = () => {
     axios.get('http://localhost:8000/api/stocks/')
@@ -88,26 +96,26 @@ const StockList = () => {
 
   const applyFiltersAndSorting = () => {
     let filtered = [...stocks];
-    if (criteria.minRS) {
-      filtered = filtered.filter(stock => stock.rs > criteria.minRS);
+    if (criteria.minRS !== '') {
+      filtered = filtered.filter(stock => stock.rs > parseFloat(criteria.minRS));
     }
-    if (criteria.minRV) {
-      filtered = filtered.filter(stock => stock.rv > criteria.minRV);
+    if (criteria.minRV !== '') {
+      filtered = filtered.filter(stock => stock.rv > parseFloat(criteria.minRV));
     }
-    if (criteria.minCI) {
-      filtered = filtered.filter(stock => stock.ci > criteria.minCI);
+    if (criteria.minCI !== '') {
+      filtered = filtered.filter(stock => stock.ci > parseFloat(criteria.minCI));
     }
-    if (criteria.minRT) {
-      filtered = filtered.filter(stock => stock.rt > criteria.minRT);
+    if (criteria.minRT !== '') {
+      filtered = filtered.filter(stock => stock.rt > parseFloat(criteria.minRT));
     }
-    if (criteria.minGRT) {
-      filtered = filtered.filter(stock => stock.grt > criteria.minGRT);
+    if (criteria.minGRT !== '') {
+      filtered = filtered.filter(stock => stock.grt > parseFloat(criteria.minGRT));
     }
-    if (criteria.minSales) {
-      filtered = filtered.filter(stock => stock.sales > criteria.minSales);
+    if (criteria.minSales !== '') {
+      filtered = filtered.filter(stock => stock.sales > parseFloat(criteria.minSales));
     }
-    if (criteria.minEYPercentage) {
-      filtered = filtered.filter(stock => stock.ey_percentage > criteria.minEYPercentage);
+    if (criteria.minEYPercentage !== '') {
+      filtered = filtered.filter(stock => stock.ey_percentage > parseFloat(criteria.minEYPercentage));
     }
     if (grtSalesFilter) {
       filtered = filtered.filter(stock => stock.grt > stock.sales);
@@ -144,7 +152,13 @@ const StockList = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleCriteriaChange = (e) => {
+    const { name, value } = e.target;
+    setCriteria({ ...criteria, [name]: value });
   };
 
   const handleSubmit = (e) => {
@@ -173,20 +187,20 @@ const StockList = () => {
   };
 
   const columns = [
-    { field: 'ticker', headerName: 'Ticker', width: 150 },
-    { field: 'description', headerName: 'Description', width: 300 },
-    { field: 'formulaValue', headerName: selectedFormula, width: 150 },
-    { field: 'rs', headerName: 'RS', width: 100 },
-    { field: 'rv', headerName: 'RV', width: 100 },
-    { field: 'ci', headerName: 'CI', width: 100 },
-    { field: 'rt', headerName: 'RT', width: 100 },
-    { field: 'grt', headerName: 'GRT', width: 100 },
-    { field: 'sales', headerName: 'Sales', width: 100 },
-    { field: 'ey_percentage', headerName: 'EY%', width: 100 },
+    { field: 'ticker', headerName: 'Ticker', flex: 1 },
+    { field: 'description', headerName: 'Description', flex: 2 },
+    { field: 'formulaValue', headerName: selectedFormula, flex: 1 },
+    { field: 'rs', headerName: 'RS', flex: 1 },
+    { field: 'rv', headerName: 'RV', flex: 1 },
+    { field: 'ci', headerName: 'CI', flex: 1 },
+    { field: 'rt', headerName: 'RT', flex: 1 },
+    { field: 'grt', headerName: 'GRT', flex: 1 },
+    { field: 'sales', headerName: 'Sales', flex: 1 },
+    { field: 'ey_percentage', headerName: 'EY%', flex: 1 },
     { 
       field: 'actions', 
       headerName: 'Actions', 
-      width: 150, 
+      flex: 1, 
       renderCell: (params) => (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <IconButton 
@@ -212,15 +226,14 @@ const StockList = () => {
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#f0f4c3' }}>
             <Typography variant="h6">
-              Total Stocks:{stocks.length}
-              
+              Total Stocks: {stocks.length}
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#e1bee7' }}>
             <Typography variant="h6">
-              Results Meeting Criteria :  {filteredStocks.length}
+              Results Meeting Criteria: {filteredStocks.length}
             </Typography>
           </Paper>
         </Grid>
@@ -239,83 +252,80 @@ const StockList = () => {
             </Select>
           </FormControl>
         </Grid>
-       
       </Grid>
       <Box sx={{ marginTop: 3 }}>
         <Typography variant="h6" gutterBottom>
-        Filters
+          Filters
         </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min RS"
-              type="number"
-              value={criteria.minRS || ''}
-              onChange={(e) => setCriteria({ ...criteria, minRS: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min RV"
-              type="number"
-              value={criteria.minRV || ''}
-              onChange={(e) => setCriteria({ ...criteria, minRV: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min CI"
-              type="number"
-              value={criteria.minCI || ''}
-              onChange={(e) => setCriteria({ ...criteria, minCI: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min RT"
-              type="number"
-              value={criteria.minRT || ''}
-              onChange={(e) => setCriteria({ ...criteria, minRT: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min GRT"
-              type="number"
-              value={criteria.minGRT || ''}
-              onChange={(e) => setCriteria({ ...criteria, minGRT: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min Sales"
-              type="number"
-              value={criteria.minSales || ''}
-              onChange={(e) => setCriteria({ ...criteria, minSales: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Min EY%"
-              type="number"
-              value={criteria.minEYPercentage || ''}
-              onChange={(e) => setCriteria({ ...criteria, minEYPercentage: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControlLabel
-              control={<Checkbox checked={grtSalesFilter} onChange={(e) => setGrtSalesFilter(e.target.checked)} />}
-              label="GRT > Sales"
-            />
-          </Grid>
-        </Grid>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          <TextField
+            label="RS >"
+            type="number"
+            size="small"
+            value={criteria.minRS}
+            onChange={handleCriteriaChange}
+            name="minRS"
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="RV >"
+            type="number"
+            size="small"
+            value={criteria.minRV}
+            onChange={handleCriteriaChange}
+            name="minRV"
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="CI >"
+            type="number"
+            size="small"
+            value={criteria.minCI}
+            onChange={handleCriteriaChange}
+            name="minCI"
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="RT >"
+            type="number"
+            size="small"
+            value={criteria.minRT}
+            onChange={handleCriteriaChange}
+            name="minRT"
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="GRT >"
+            type="number"
+            size="small"
+            value={criteria.minGRT}
+            onChange={handleCriteriaChange}
+            name="minGRT"
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="SALES >"
+            type="number"
+            size="small"
+            value={criteria.minSales}
+            onChange={handleCriteriaChange}
+            name="minSales"
+            sx={{ width: 120 }}
+          />
+          <TextField
+            label="EY% >"
+            type="number"
+            size="small"
+            value={criteria.minEYPercentage}
+            onChange={handleCriteriaChange}
+            name="minEYPercentage"
+            sx={{ width: 120 }}
+          />
+          <FormControlLabel
+            control={<Checkbox checked={grtSalesFilter} onChange={(e) => setGrtSalesFilter(e.target.checked)} />}
+            label="GRT > Sales"
+          />
+        </Box>
       </Box>
       <Box sx={{ marginTop: 3 }}>
         <Typography variant="h6" gutterBottom>
