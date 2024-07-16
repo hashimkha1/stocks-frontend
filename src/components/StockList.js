@@ -28,13 +28,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 const sortingFormulas = {
-  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv / 3)).toFixed(2),
-  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci / 3)).toFixed(2),
+  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv) / 3).toFixed(2),
+  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci )/ 3).toFixed(2),
   'RS+RS+RT/3': (stock) => ((stock.rs + stock.rs + stock.rt / 3)).toFixed(2),
-  'RS+RV/2': (stock) => ((stock.rs + stock.rv / 2)).toFixed(2),
-  'RS+CI/2': (stock) => ((stock.rs + stock.ci / 2)).toFixed(2),
-  'RS+RT/2': (stock) => ((stock.rs + stock.rt / 2)).toFixed(2),
-  'RS+RV+CI/3': (stock) => ((stock.rs + stock.rv + stock.ci / 3)).toFixed(2)
+  'RS+RV/2': (stock) => ((stock.rs + stock.rv )/ 2).toFixed(2),
+  'RS+CI/2': (stock) => ((stock.rs + stock.ci )/ 2).toFixed(2),
+  'RS+RT/2': (stock) => ((stock.rs + stock.rt )/ 2).toFixed(2),
+  'RS+RV+CI/3': (stock) => ((stock.rs + stock.rv + stock.ci )/ 3).toFixed(2)
 };
 
 const defaultCriteria = {
@@ -252,7 +252,7 @@ const StockList = () => {
     { field: 'ci', headerName: 'CI', flex: 1 },
     { field: 'rt', headerName: 'RT', flex: 1 },
     { field: 'grt', headerName: 'GRT', flex: 1 },
-    { field: 'sales', headerName: 'Sales', flex: 1 },
+    { field: 'Sales GRT', headerName: 'Sales GRT', flex: 1 },
     { field: 'ey_percentage', headerName: 'EY%', flex: 1 },
     { 
       field: 'actions', 
