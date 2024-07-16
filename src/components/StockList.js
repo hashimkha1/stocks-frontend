@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DataGrid } from '@mui/x-data-grid';
+import USA from '../assets/USA.png'
+import Australia from '../assets/Australia.png'
+import Canada from '../assets/Canada.png'
+import Europe from '../assets/Europe.png'
 import {
   Box,
   Button,
@@ -28,13 +32,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 const sortingFormulas = {
-  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv) / 3).toFixed(2),
-  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci )/ 3).toFixed(2),
+  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv / 3)).toFixed(2),
+  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci / 3)).toFixed(2),
   'RS+RS+RT/3': (stock) => ((stock.rs + stock.rs + stock.rt / 3)).toFixed(2),
-  'RS+RV/2': (stock) => ((stock.rs + stock.rv )/ 2).toFixed(2),
-  'RS+CI/2': (stock) => ((stock.rs + stock.ci )/ 2).toFixed(2),
-  'RS+RT/2': (stock) => ((stock.rs + stock.rt )/ 2).toFixed(2),
-  'RS+RV+CI/3': (stock) => ((stock.rs + stock.rv + stock.ci )/ 3).toFixed(2)
+  'RS+RV/2': (stock) => ((stock.rs + stock.rv / 2)).toFixed(2),
+  'RS+CI/2': (stock) => ((stock.rs + stock.ci / 2)).toFixed(2),
+  'RS+RT/2': (stock) => ((stock.rs + stock.rt / 2)).toFixed(2),
+  'RS+RV+CI/3': (stock) => ((stock.rs + stock.rv + stock.ci / 3)).toFixed(2)
 };
 
 const defaultCriteria = {
@@ -47,12 +51,14 @@ const defaultCriteria = {
   minEYPercentage: 4,
 };
 
+const countries = ['USA', 'Europe', 'Canada', 'Australia'];
+
 const StockList = () => {
   const [stocks, setStocks] = useState([]);
   const [displayResults, setDisplayResults] = useState(10);
   const [criteria, setCriteria] = useState(defaultCriteria);
   const [filteredStocks, setFilteredStocks] = useState([]);
-  const [selectedFormula, setSelectedFormula] = useState('RS+RS+RV/3');
+  const [selectedFormula, setSelectedFormula] = useState('RS+RS+CI/3');
   const [grtSalesFilter, setGrtSalesFilter] = useState(false);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,7 +70,8 @@ const StockList = () => {
     rt: 0,
     grt: 0,
     sales: 0,
-    ey_percentage: 0
+    ey_percentage: 0,
+    country: ''
   });
   const [selectedStock, setSelectedStock] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -72,6 +79,8 @@ const StockList = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [selectedCountry, setSelectedCountry] = useState('All');
+  const [countryFlag, setCountryFlag] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -81,10 +90,10 @@ const StockList = () => {
     if (stocks.length > 0) {
       applyFiltersAndSorting();
     }
-  }, [criteria, displayResults, selectedFormula, grtSalesFilter, stocks]);
+  }, [criteria, displayResults, selectedFormula, grtSalesFilter, stocks, selectedCountry]);
 
   const fetchData = () => {
-    axios.get('https://discipleshiptrails.com/backend/api/stocks/')
+    axios.get('http://localhost:8000/api/stocks/')
       .then(response => {
         setStocks(response.data);
         setFilteredStocks(response.data);
@@ -93,7 +102,7 @@ const StockList = () => {
   };
 
   const handleDelete = (id) => {
-    axios.delete(`https://discipleshiptrails.com/backend/api/stocks/${id}/`)
+    axios.delete(`http://localhost:8000/api/stocks/${id}/`)
       .then(() => {
         fetchData();
         if (selectedStock && selectedStock.id === id) {
@@ -114,6 +123,10 @@ const StockList = () => {
 
   const applyFiltersAndSorting = () => {
     let filtered = [...stocks];
+
+    if (selectedCountry !== 'All') {
+      filtered = filtered.filter(stock => stock.country === selectedCountry);
+    }
 
     if (criteria.minRS !== '') {
       filtered = filtered.filter(stock => stock.rs > parseFloat(criteria.minRS));
@@ -162,7 +175,8 @@ const StockList = () => {
       rt: 0,
       grt: 0,
       sales: 0,
-      ey_percentage: 0
+      ey_percentage: 0,
+      country: ''
     });
   };
 
@@ -183,7 +197,7 @@ const StockList = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedStock) {
-      axios.put(`https://discipleshiptrails.com/backend/api/stocks/${selectedStock.id}/`, formData)
+      axios.put(`http://localhost:8000/api/stocks/${selectedStock.id}/`, formData)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -198,7 +212,7 @@ const StockList = () => {
           setSnackbarOpen(true);
         });
     } else {
-      axios.post('https://discipleshiptrails.com/backend/api/stocks/', formData)
+      axios.post('http://localhost:8000/api/stocks/', formData)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -243,6 +257,27 @@ const StockList = () => {
     setSnackbarOpen(false);
   };
 
+  const handleCountryClick = (country) => {
+    setSelectedCountry(country);
+    switch (country) {
+      case 'USA':
+        setCountryFlag(USA);
+        break;
+      case 'Europe':
+        setCountryFlag(Europe);
+        break;
+      case 'Canada':
+        setCountryFlag(Canada);
+        break;
+      case 'Australia':
+        setCountryFlag(Australia);
+        break;
+      default:
+        setCountryFlag(null);
+        break;
+    }
+  };
+
   const columns = [
     { field: 'ticker', headerName: 'Ticker', flex: 1 },
     { field: 'description', headerName: 'Description', flex: 2 },
@@ -252,7 +287,7 @@ const StockList = () => {
     { field: 'ci', headerName: 'CI', flex: 1 },
     { field: 'rt', headerName: 'RT', flex: 1 },
     { field: 'grt', headerName: 'GRT', flex: 1 },
-    { field: 'Sales GRT', headerName: 'Sales GRT', flex: 1 },
+    { field: 'sales', headerName: 'Sales GRT', flex: 1 },
     { field: 'ey_percentage', headerName: 'EY%', flex: 1 },
     { 
       field: 'actions', 
@@ -279,6 +314,13 @@ const StockList = () => {
 
   return (
     <Box sx={{ padding: 3 }}>
+      {countryFlag && (
+        <Box sx={{ position: 'absolute', top: 0, left: 0, padding: 1 }}>
+          <img src={countryFlag} alt="Country Flag" style={{ width: '120px', height: '63.5px' }} />
+          
+        </Box>
+      )}
+      
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#f0f4c3' }}>
@@ -361,7 +403,7 @@ const StockList = () => {
             sx={{ width: 120 }}
           />
           <TextField
-            label="SALES >"
+            label="Sales GRT >"
             type="number"
             size="small"
             value={criteria.minSales}
@@ -403,6 +445,25 @@ const StockList = () => {
             </Grid>
           ))}
         </Grid>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
+        <Button onClick={() => handleCountryClick('USA')}>
+          <img src={USA} alt="USA" style={{ width: '100px', height: '60px' }} />
+        </Button>
+        <Button onClick={() => handleCountryClick('Europe')}>
+          <img src={Europe} alt="Europe" style={{ width: '100px', height: '60px' }} />
+        </Button>
+        <Button onClick={() => handleCountryClick('Canada')}>
+          <img src={Canada} alt="Canada" style={{ width: '100px', height: '60px' }} />
+        </Button>
+        <Button onClick={() => handleCountryClick('Australia')}>
+          <img src={Australia} alt="Australia" style={{ width: '100px', height: '60px' }} />
+        </Button>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
+        <Button variant="contained" onClick={() => handleCountryClick('All')}>
+          Show All Countries
+        </Button>
       </Box>
       <Box sx={{ height: 600, marginTop: 3 }}>
         <DataGrid 
@@ -460,10 +521,25 @@ const StockList = () => {
               <TextField margin="dense" name="rt" label="RT" type="number" fullWidth value={formData.rt} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField margin="dense" name="sales" label="Sales" type="number" fullWidth value={formData.sales} onChange={handleChange} />
+              <TextField margin="dense" name="sales" label="Sales GRT" type="number" fullWidth value={formData.sales} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField margin="dense" name="ci" label="CI" type="number" fullWidth value={formData.ci} onChange={handleChange} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth margin="dense">
+                <InputLabel id="country-label">Country</InputLabel>
+                <Select
+                  labelId="country-label"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                >
+                  {countries.map(country => (
+                    <MenuItem key={country} value={country}>{country}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
         </DialogContent>

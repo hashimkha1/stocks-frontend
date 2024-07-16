@@ -8,7 +8,7 @@ const AuthProvider = ({ children }) => {
 
   const login = async (password) => {
     try {
-      const response = await axios.post('https://discipleshiptrails.com/backend/api/login/', { password });
+      const response = await axios.post('http://localhost:8000/api/login/', { password });
       setAuthenticated(true);
       return { success: true, message: response.data.message };
     } catch (error) {
@@ -21,7 +21,7 @@ const AuthProvider = ({ children }) => {
 
   const changePassword = async (oldPassword, newPassword) => {
     try {
-      const response = await axios.post('https://discipleshiptrails.com/backend/api/change-password/', {
+      const response = await axios.post('http://localhost:8000/api/change-password/', {
         old_password: oldPassword,
         new_password: newPassword,
       });
