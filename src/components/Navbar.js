@@ -1,10 +1,16 @@
 import React, { useContext } from 'react';
 import { AppBar, Toolbar, Typography, Button } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const NavBar = () => {
-  const { authenticated } = useContext(AuthContext);
+  const { authenticated, setAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setAuthenticated(false);
+    navigate('/stocks');
+  };
 
   return (
     <AppBar position="static">
@@ -17,8 +23,8 @@ const NavBar = () => {
             <Button color="inherit" component={Link} to="/change-password">
               Change Password
             </Button>
-            <Button color="inherit" component={Link} to="/">
-              Home
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
             </Button>
           </>
         )}

@@ -20,12 +20,12 @@ import {
   DialogTitle,
   Fab,
   IconButton,
-  Snackbar
+  Snackbar,
+  Alert
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import MuiAlert from '@mui/material/Alert';
 
 const sortingFormulas = {
   'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv / 3)).toFixed(2),
@@ -33,7 +33,8 @@ const sortingFormulas = {
   'RS+RS+RT/3': (stock) => ((stock.rs + stock.rs + stock.rt / 3)).toFixed(2),
   'RS+RV/2': (stock) => ((stock.rs + stock.rv / 2)).toFixed(2),
   'RS+CI/2': (stock) => ((stock.rs + stock.ci / 2)).toFixed(2),
-  'RS+RT/2': (stock) => ((stock.rs + stock.rt / 2)).toFixed(2)
+  'RS+RT/2': (stock) => ((stock.rs + stock.rt / 2)).toFixed(2),
+  'RS+RV+CI/3': (stock) => ((stock.rs + stock.rv + stock.ci / 3)).toFixed(2)
 };
 
 const defaultCriteria = {
@@ -41,14 +42,10 @@ const defaultCriteria = {
   minRV: 1.3,
   minCI: 1.3,
   minRT: 1,
-  minGRT: 10,
-  minSales: 10,
+  minGRT: 5,
+  minSales: 3,
   minEYPercentage: 4,
 };
-
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
 
 const StockList = () => {
   const [stocks, setStocks] = useState([]);
@@ -70,6 +67,8 @@ const StockList = () => {
     ey_percentage: 0
   });
   const [selectedStock, setSelectedStock] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [stockToDelete, setStockToDelete] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
@@ -79,8 +78,10 @@ const StockList = () => {
   }, []);
 
   useEffect(() => {
-    applyFiltersAndSorting();
-  }, [criteria, displayResults, selectedFormula, grtSalesFilter]);
+    if (stocks.length > 0) {
+      applyFiltersAndSorting();
+    }
+  }, [criteria, displayResults, selectedFormula, grtSalesFilter, stocks]);
 
   const fetchData = () => {
     axios.get('https://discipleshiptrails.com/backend/api/stocks/')
@@ -113,6 +114,7 @@ const StockList = () => {
 
   const applyFiltersAndSorting = () => {
     let filtered = [...stocks];
+
     if (criteria.minRS !== '') {
       filtered = filtered.filter(stock => stock.rs > parseFloat(criteria.minRS));
     }
@@ -213,16 +215,31 @@ const StockList = () => {
     }
   };
 
-  const handleRowClick = (params) => {
-    setSelectedStock(params.row);
-    setFormData(params.row);
+  const handleEditIconClick = (stock) => {
+    setSelectedStock(stock);
+    setFormData(stock);
     setOpen(true);
   };
 
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
+  const handleDeleteIconClick = (stock) => {
+    setStockToDelete(stock);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setStockToDelete(null);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (stockToDelete) {
+      handleDelete(stockToDelete.id);
+      setDeleteDialogOpen(false);
+      setStockToDelete(null);
     }
+  };
+
+  const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
@@ -245,13 +262,13 @@ const StockList = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <IconButton 
             color="error"
-            onClick={() => handleDelete(params.row.id)}
+            onClick={() => handleDeleteIconClick(params.row)}
           >
             <DeleteIcon />
           </IconButton>
           <IconButton 
             color="primary"
-            onClick={() => handleRowClick(params)}
+            onClick={() => handleEditIconClick(params.row)}
           >
             <EditIcon />
           </IconButton>
@@ -392,7 +409,6 @@ const StockList = () => {
           rows={filteredStocks} 
           columns={columns} 
           pageSize={10} 
-          onRowClick={handleRowClick} 
           sx={{
             '& .MuiDataGrid-root': {
               backgroundColor: '#e3f2fd',
@@ -418,9 +434,9 @@ const StockList = () => {
       <Fab color="primary" aria-label="add" onClick={handleClickOpen} sx={{ position: 'fixed', bottom: 16, right: 16 }}>
         <AddIcon />
       </Fab>
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>{selectedStock ? "Edit Stock" : "Add Stock"}</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField autoFocus margin="dense" name="ticker" label="Ticker" fullWidth value={formData.ticker} onChange={handleChange} />
@@ -429,31 +445,31 @@ const StockList = () => {
               <TextField margin="dense" name="description" label="Description" fullWidth value={formData.description} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField margin="dense" name="rs" label="RS" type="number" fullWidth value={formData.rs} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
               <TextField margin="dense" name="rv" label="RV" type="number" fullWidth value={formData.rv} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField margin="dense" name="ci" label="CI" type="number" fullWidth value={formData.ci} onChange={handleChange} />
+              <TextField margin="dense" name="ey_percentage" label="EY%" type="number" fullWidth value={formData.ey_percentage} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField margin="dense" name="rt" label="RT" type="number" fullWidth value={formData.rt} onChange={handleChange} />
+              <TextField margin="dense" name="rs" label="RS" type="number" fullWidth value={formData.rs} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField margin="dense" name="grt" label="GRT" type="number" fullWidth value={formData.grt} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
+              <TextField margin="dense" name="rt" label="RT" type="number" fullWidth value={formData.rt} onChange={handleChange} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
               <TextField margin="dense" name="sales" label="Sales" type="number" fullWidth value={formData.sales} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField margin="dense" name="ey_percentage" label="EY%" type="number" fullWidth value={formData.ey_percentage} onChange={handleChange} />
+              <TextField margin="dense" name="ci" label="CI" type="number" fullWidth value={formData.ci} onChange={handleChange} />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           {selectedStock && (
-            <Button onClick={() => handleDelete(selectedStock.id)} color="secondary">
+            <Button onClick={() => handleDeleteIconClick(selectedStock)} color="secondary">
               Delete
             </Button>
           )}
@@ -462,6 +478,22 @@ const StockList = () => {
           </Button>
           <Button onClick={handleSubmit} color="primary">
             {selectedStock ? "Update" : "Add"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteDialogClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete stock?</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body1">
+            Are you sure you want to delete this stock?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="primary">
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>

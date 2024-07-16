@@ -12,7 +12,10 @@ const AuthProvider = ({ children }) => {
       setAuthenticated(true);
       return { success: true, message: response.data.message };
     } catch (error) {
-      return { success: false, message: error.response.data.message };
+      const message = error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'An error occurred during login';
+      return { success: false, message };
     }
   };
 
@@ -24,12 +27,15 @@ const AuthProvider = ({ children }) => {
       });
       return { success: true, message: response.data.message };
     } catch (error) {
-      return { success: false, message: error.response.data.message };
+      const message = error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'An error occurred while changing the password';
+      return { success: false, message };
     }
   };
 
   return (
-    <AuthContext.Provider value={{ authenticated, login, changePassword }}>
+    <AuthContext.Provider value={{ authenticated, setAuthenticated, login, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

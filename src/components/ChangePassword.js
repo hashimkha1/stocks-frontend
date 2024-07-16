@@ -20,7 +20,7 @@ const ChangePassword = () => {
     if (result.success) {
       setSnackbarMessage(result.message);
       setSnackbarSeverity('success');
-      navigate('/');
+      navigate('/home');
     } else {
       setError(result.message);
       setSnackbarMessage(result.message);
