@@ -32,13 +32,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 const sortingFormulas = {
-  'RS+RS+RV/3': (stock) => ((stock.rs + stock.rs + stock.rv / 3)).toFixed(2),
-  'RS+RS+CI/3': (stock) => ((stock.rs + stock.rs + stock.ci / 3)).toFixed(2),
-  'RS+RS+RT/3': (stock) => ((stock.rs + stock.rs + stock.rt / 3)).toFixed(2),
-  'RS+RV/2': (stock) => ((stock.rs + stock.rv / 2)).toFixed(2),
-  'RS+CI/2': (stock) => ((stock.rs + stock.ci / 2)).toFixed(2),
-  'RS+RT/2': (stock) => ((stock.rs + stock.rt / 2)).toFixed(2),
-  'RS+RV+CI/3': (stock) => ((stock.rs + stock.rv + stock.ci / 3)).toFixed(2)
+  '(RS+RS+RV)/3': (stock) => ((stock.rs + stock.rs + stock.rv )/ 3).toFixed(2),
+  '(RS+RS+CI)/3': (stock) => ((stock.rs + stock.rs + stock.ci )/ 3).toFixed(2),
+  '(RS+RS+RT)/3': (stock) => ((stock.rs + stock.rs + stock.rt )/ 3).toFixed(2),
+  '(RS+RV)/2': (stock) => ((stock.rs + stock.rv )/ 2).toFixed(2),
+  '(RS+CI)/2': (stock) => ((stock.rs + stock.ci )/ 2).toFixed(2),
+  '(RS+RT)/2': (stock) => ((stock.rs + stock.rt )/ 2).toFixed(2),
+  '(RS+RV+CI)/3': (stock) => ((stock.rs + stock.rv + stock.ci )/ 3).toFixed(2)
 };
 
 const defaultCriteria = {
@@ -58,7 +58,7 @@ const StockList = () => {
   const [displayResults, setDisplayResults] = useState(10);
   const [criteria, setCriteria] = useState(defaultCriteria);
   const [filteredStocks, setFilteredStocks] = useState([]);
-  const [selectedFormula, setSelectedFormula] = useState('RS+RS+CI/3');
+  const [selectedFormula, setSelectedFormula] = useState('(RS+RS+CI)/3');
   const [grtSalesFilter, setGrtSalesFilter] = useState(false);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -176,7 +176,7 @@ const StockList = () => {
       grt: 0,
       sales: 0,
       ey_percentage: 0,
-      country: ''
+     country: selectedCountry !== 'All' ? selectedCountry : ''
     });
   };
 
@@ -311,6 +311,7 @@ const StockList = () => {
       ) 
     },
   ];
+  const isSelectedCountry = (country) => selectedCountry === country;
 
   return (
     <Box sx={{ padding: 3 }}>
@@ -447,17 +448,17 @@ const StockList = () => {
         </Grid>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
-        <Button onClick={() => handleCountryClick('USA')}>
+        <Button onClick={() => handleCountryClick('USA')} sx={{ border: isSelectedCountry('USA') ? '2px solid blue' : 'none' }}>
           <img src={USA} alt="USA" style={{ width: '100px', height: '60px' }} />
         </Button>
-        <Button onClick={() => handleCountryClick('Europe')}>
+        <Button onClick={() => handleCountryClick('Europe')} sx={{ border: isSelectedCountry('Europe') ? '2px solid blue' : 'none' }}>
           <img src={Europe} alt="Europe" style={{ width: '100px', height: '60px' }} />
         </Button>
-        <Button onClick={() => handleCountryClick('Canada')}>
-          <img src={Canada} alt="Canada" style={{ width: '100px', height: '60px' }} />
+        <Button onClick={() => handleCountryClick('Canada')} sx={{ border: isSelectedCountry('Canada') ? '2px solid blue' : 'none' }}>
+          <img src={Canada} alt="Canada" style={{  width: '100px', height: '60px' }} />
         </Button>
-        <Button onClick={() => handleCountryClick('Australia')}>
-          <img src={Australia} alt="Australia" style={{ width: '100px', height: '60px' }} />
+        <Button onClick={() => handleCountryClick('Australia')} sx={{ border: isSelectedCountry('Australia') ? '2px solid blue' : 'none' }}>
+          <img src={Australia} alt="Australia" style={{  width: '100px', height: '60px' }} />
         </Button>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
@@ -527,19 +528,17 @@ const StockList = () => {
               <TextField margin="dense" name="ci" label="CI" type="number" fullWidth value={formData.ci} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth margin="dense">
-                <InputLabel id="country-label">Country</InputLabel>
-                <Select
-                  labelId="country-label"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                >
-                  {countries.map(country => (
-                    <MenuItem key={country} value={country}>{country}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <TextField
+                margin="dense"
+                name="country"
+                label="Country"
+                fullWidth
+                value={formData.country}
+                InputProps={{
+                  readOnly: true,
+                }}
+                onChange={handleChange}
+              />
             </Grid>
           </Grid>
         </DialogContent>
