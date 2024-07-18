@@ -13,7 +13,7 @@ const NavBar = ({ countryFlag }) => {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx= {{backgroundColor: '#ee0979'}}>
       <Toolbar>
         {countryFlag && (
           <Box sx={{ padding: 1 }}>
@@ -21,7 +21,7 @@ const NavBar = ({ countryFlag }) => {
           </Box>
         )}
         <Typography variant="h6" component="div" sx={{ flexGrow: 1, paddingLeft: 15 }}>
-          Stock Sorter
+          
         </Typography>
         {authenticated && (
           <>

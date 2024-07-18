@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DataGrid } from '@mui/x-data-grid';
-import USA from '../assets/USA.png'
-import Australia from '../assets/Australia.png'
-import Canada from '../assets/Canada.png'
-import Europe from '../assets/Europe.png'
+import USA from '../assets/USA.png';
+import Australia from '../assets/Australia.png';
+import Canada from '../assets/Canada.png';
+import Europe from '../assets/Europe.png';
 import {
   Box,
   Button,
@@ -25,20 +25,22 @@ import {
   Fab,
   IconButton,
   Snackbar,
-  Alert
+  Alert,
+  Tooltip,
+  Avatar
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 const sortingFormulas = {
-  '(RS+RS+RV)/3': (stock) => ((stock.rs + stock.rs + stock.rv )/ 3).toFixed(2),
-  '(RS+RS+CI)/3': (stock) => ((stock.rs + stock.rs + stock.ci )/ 3).toFixed(2),
-  '(RS+RS+RT)/3': (stock) => ((stock.rs + stock.rs + stock.rt )/ 3).toFixed(2),
-  '(RS+RV)/2': (stock) => ((stock.rs + stock.rv )/ 2).toFixed(2),
-  '(RS+CI)/2': (stock) => ((stock.rs + stock.ci )/ 2).toFixed(2),
-  '(RS+RT)/2': (stock) => ((stock.rs + stock.rt )/ 2).toFixed(2),
-  '(RS+RV+CI)/3': (stock) => ((stock.rs + stock.rv + stock.ci )/ 3).toFixed(2)
+  '(RS+RS+RV)/3': (stock) => ((stock.rs + stock.rs + stock.rv) / 3).toFixed(2),
+  '(RS+RS+CI)/3': (stock) => ((stock.rs + stock.rs + stock.ci) / 3).toFixed(2),
+  '(RS+RS+RT)/3': (stock) => ((stock.rs + stock.rs + stock.rt) / 3).toFixed(2),
+  '(RS+RV)/2': (stock) => ((stock.rs + stock.rv) / 2).toFixed(2),
+  '(RS+CI)/2': (stock) => ((stock.rs + stock.ci) / 2).toFixed(2),
+  '(RS+RT)/2': (stock) => ((stock.rs + stock.rt) / 2).toFixed(2),
+  '(RS+RV+CI)/3': (stock) => ((stock.rs + stock.rv + stock.ci) / 3).toFixed(2)
 };
 
 const defaultCriteria = {
@@ -48,10 +50,15 @@ const defaultCriteria = {
   minRT: 1,
   minGRT: 5,
   minSales: 3,
-  minEYPercentage: 4,
+  minEYPercentage: 2,
 };
 
-const countries = ['USA', 'Europe', 'Canada', 'Australia'];
+const countries = [
+  { name: 'USA', flag: USA },
+  { name: 'Europe', flag: Europe },
+  { name: 'Canada', flag: Canada },
+  { name: 'Australia', flag: Australia },
+];
 
 const StockList = () => {
   const [stocks, setStocks] = useState([]);
@@ -59,7 +66,8 @@ const StockList = () => {
   const [criteria, setCriteria] = useState(defaultCriteria);
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [selectedFormula, setSelectedFormula] = useState('(RS+RS+CI)/3');
-  const [grtSalesFilter, setGrtSalesFilter] = useState(false);
+  const [salesGRTFilter, setSalesGRTFilter] = useState(false);
+  const [ignoreFilters, setIgnoreFilters] = useState(false);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     ticker: '',
@@ -90,10 +98,10 @@ const StockList = () => {
     if (stocks.length > 0) {
       applyFiltersAndSorting();
     }
-  }, [criteria, displayResults, selectedFormula, grtSalesFilter, stocks, selectedCountry]);
+  }, [criteria, displayResults, selectedFormula, salesGRTFilter, ignoreFilters, stocks, selectedCountry]);
 
   const fetchData = () => {
-    axios.get('http://localhost:8000/api/stocks/')
+    axios.get('https://discipleshiptrails.com/backend/api/stocks/')
       .then(response => {
         setStocks(response.data);
         setFilteredStocks(response.data);
@@ -102,7 +110,7 @@ const StockList = () => {
   };
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:8000/api/stocks/${id}/`)
+    axios.delete(`https://discipleshiptrails.com/backend/api/stocks/${id}/`)
       .then(() => {
         fetchData();
         if (selectedStock && selectedStock.id === id) {
@@ -128,29 +136,31 @@ const StockList = () => {
       filtered = filtered.filter(stock => stock.country === selectedCountry);
     }
 
-    if (criteria.minRS !== '') {
-      filtered = filtered.filter(stock => stock.rs > parseFloat(criteria.minRS));
-    }
-    if (criteria.minRV !== '') {
-      filtered = filtered.filter(stock => stock.rv > parseFloat(criteria.minRV));
-    }
-    if (criteria.minCI !== '') {
-      filtered = filtered.filter(stock => stock.ci > parseFloat(criteria.minCI));
-    }
-    if (criteria.minRT !== '') {
-      filtered = filtered.filter(stock => stock.rt > parseFloat(criteria.minRT));
-    }
-    if (criteria.minGRT !== '') {
-      filtered = filtered.filter(stock => stock.grt > parseFloat(criteria.minGRT));
-    }
-    if (criteria.minSales !== '') {
-      filtered = filtered.filter(stock => stock.sales > parseFloat(criteria.minSales));
-    }
-    if (criteria.minEYPercentage !== '') {
-      filtered = filtered.filter(stock => stock.ey_percentage > parseFloat(criteria.minEYPercentage));
-    }
-    if (grtSalesFilter) {
-      filtered = filtered.filter(stock => stock.grt > stock.sales);
+    if (!ignoreFilters) {
+      if (criteria.minRS !== '') {
+        filtered = filtered.filter(stock => stock.rs > parseFloat(criteria.minRS));
+      }
+      if (criteria.minRV !== '') {
+        filtered = filtered.filter(stock => stock.rv > parseFloat(criteria.minRV));
+      }
+      if (criteria.minCI !== '') {
+        filtered = filtered.filter(stock => stock.ci > parseFloat(criteria.minCI));
+      }
+      if (criteria.minRT !== '') {
+        filtered = filtered.filter(stock => stock.rt > parseFloat(criteria.minRT));
+      }
+      if (criteria.minGRT !== '') {
+        filtered = filtered.filter(stock => stock.grt > parseFloat(criteria.minGRT));
+      }
+      if (criteria.minSales !== '') {
+        filtered = filtered.filter(stock => stock.sales > parseFloat(criteria.minSales));
+      }
+      if (criteria.minEYPercentage !== '') {
+        filtered = filtered.filter(stock => stock.ey_percentage > parseFloat(criteria.minEYPercentage));
+      }
+      if (salesGRTFilter) {
+        filtered = filtered.filter(stock => stock.sales > stock.grt);
+      }
     }
 
     filtered = filtered.map(stock => ({
@@ -176,7 +186,7 @@ const StockList = () => {
       grt: 0,
       sales: 0,
       ey_percentage: 0,
-     country: selectedCountry !== 'All' ? selectedCountry : ''
+      country: selectedCountry !== 'All' ? selectedCountry : ''
     });
   };
 
@@ -192,12 +202,30 @@ const StockList = () => {
   const handleCriteriaChange = (e) => {
     const { name, value } = e.target;
     setCriteria({ ...criteria, [name]: value });
+    setIgnoreFilters(false);
+  };
+
+  const handleSalesGRTFilterChange = (e) => {
+    setSalesGRTFilter(e.target.checked);
+    setIgnoreFilters(false);
+  };
+
+  const handleSelectedFormulaChange = (formula) => {
+    setSelectedFormula(formula);
+    setIgnoreFilters(false);
+  };
+
+  const handleIgnoreFiltersChange = (e) => {
+    setIgnoreFilters(e.target.checked);
+    if (e.target.checked) {
+      setSalesGRTFilter(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedStock) {
-      axios.put(`http://localhost:8000/api/stocks/${selectedStock.id}/`, formData)
+      axios.put(`https://discipleshiptrails.com/backend/api/stocks/${selectedStock.id}/`, formData)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -212,7 +240,7 @@ const StockList = () => {
           setSnackbarOpen(true);
         });
     } else {
-      axios.post('http://localhost:8000/api/stocks/', formData)
+      axios.post('https://discipleshiptrails.com/backend/api/stocks/', formData)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -258,24 +286,9 @@ const StockList = () => {
   };
 
   const handleCountryClick = (country) => {
-    setSelectedCountry(country);
-    switch (country) {
-      case 'USA':
-        setCountryFlag(USA);
-        break;
-      case 'Europe':
-        setCountryFlag(Europe);
-        break;
-      case 'Canada':
-        setCountryFlag(Canada);
-        break;
-      case 'Australia':
-        setCountryFlag(Australia);
-        break;
-      default:
-        setCountryFlag(null);
-        break;
-    }
+    setSelectedCountry(country.name);
+    setCountryFlag(country.flag);
+    setIgnoreFilters(false);
   };
 
   const columns = [
@@ -311,29 +324,27 @@ const StockList = () => {
       ) 
     },
   ];
-  const isSelectedCountry = (country) => selectedCountry === country;
+  const isSelectedCountry = (country) => selectedCountry === country.name;
 
   return (
     <Box sx={{ padding: 3 }}>
       {countryFlag && (
         <Box sx={{ position: 'absolute', top: 0, left: 0, padding: 1 }}>
           <img src={countryFlag} alt="Country Flag" style={{ width: '120px', height: '63.5px' }} />
-          
         </Box>
       )}
-      
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#f0f4c3' }}>
             <Typography variant="h6">
-              Total Stocks: {stocks.length}
+              Total Stocks:{stocks.length}
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#e1bee7' }}>
             <Typography variant="h6">
-              Results Meeting Criteria: {filteredStocks.length}
+              Results Meeting Criteria :  {filteredStocks.length}
             </Typography>
           </Paper>
         </Grid>
@@ -344,7 +355,7 @@ const StockList = () => {
               labelId="display-results-label"
               value={displayResults}
               label="Display Results"
-              onChange={(e) => setDisplayResults(e.target.value)}
+              onChange={(e) => { setDisplayResults(e.target.value); setIgnoreFilters(false); }}
             >
               <MenuItem value={10}>10</MenuItem>
               <MenuItem value={20}>20</MenuItem>
@@ -353,82 +364,123 @@ const StockList = () => {
           </FormControl>
         </Grid>
       </Grid>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={8}>
+          <Box>
+            <Typography variant="h4" padding={2} marginLeft={-2} gutterBottom>
+              Filters
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              <TextField
+                label="RS >"
+                type="number"
+                size="small"
+                value={criteria.minRS}
+                onChange={handleCriteriaChange}
+                name="minRS"
+                sx={{ width: 120 }}
+              />
+              <TextField
+                label="RV >"
+                type="number"
+                size="small"
+                value={criteria.minRV}
+                onChange={handleCriteriaChange}
+                name="minRV"
+                sx={{ width: 120 }}
+              />
+              <TextField
+                label="CI >"
+                type="number"
+                size="small"
+                value={criteria.minCI}
+                onChange={handleCriteriaChange}
+                name="minCI"
+                sx={{ width: 120 }}
+              />
+              <TextField
+                label="RT >"
+                type="number"
+                size="small"
+                value={criteria.minRT}
+                onChange={handleCriteriaChange}
+                name="minRT"
+                sx={{ width: 120 }}
+              />
+              <TextField
+                label="GRT >"
+                type="number"
+                size="small"
+                value={criteria.minGRT}
+                onChange={handleCriteriaChange}
+                name="minGRT"
+                sx={{ width: 120 }}
+              />
+              <TextField
+                label="Sales GRT >"
+                type="number"
+                size="small"
+                value={criteria.minSales}
+                onChange={handleCriteriaChange}
+                name="minSales"
+                sx={{ width: 120 }}
+              />
+              <TextField
+                label="EY% >"
+                type="number"
+                size="small"
+                value={criteria.minEYPercentage}
+                onChange={handleCriteriaChange}
+                name="minEYPercentage"
+                sx={{ width: 120 }}
+              />
+              <FormControlLabel
+                control={<Checkbox checked={salesGRTFilter} onChange={handleSalesGRTFilterChange} />}
+                label="Sales > GRT"
+              />
+              <FormControlLabel
+                control={<Checkbox checked={ignoreFilters} onChange={handleIgnoreFiltersChange} />}
+                label="Ignore Filters"
+              />
+            </Box>
+          </Box>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Box>
+            <Typography variant="h4" padding={2} gutterBottom>
+              
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' ,marginTop: '57px'}}>
+              {countries.map((country) => (
+                <Tooltip title={country.name} key={country.name}>
+                  <Button
+                    onClick={() => handleCountryClick(country)}
+                    sx={{
+                      border: isSelectedCountry(country) ? '3px solid blue' : 'none',
+                      borderRadius: '40px',
+                      padding: '0',
+                      minWidth: 'auto'
+                    }}
+                  >
+                    <Avatar
+                      src={country.flag}
+                      alt={country.name}
+                      sx={{ width: 70, height: 65 }}
+                    />
+                  </Button>
+                </Tooltip>
+              ))}
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+              <Button variant="contained" onClick={() => handleCountryClick({ name: 'All', flag: null })}>
+                Show All
+              </Button>
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
       <Box sx={{ marginTop: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Filters
-        </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField
-            label="RS >"
-            type="number"
-            size="small"
-            value={criteria.minRS}
-            onChange={handleCriteriaChange}
-            name="minRS"
-            sx={{ width: 120 }}
-          />
-          <TextField
-            label="RV >"
-            type="number"
-            size="small"
-            value={criteria.minRV}
-            onChange={handleCriteriaChange}
-            name="minRV"
-            sx={{ width: 120 }}
-          />
-          <TextField
-            label="CI >"
-            type="number"
-            size="small"
-            value={criteria.minCI}
-            onChange={handleCriteriaChange}
-            name="minCI"
-            sx={{ width: 120 }}
-          />
-          <TextField
-            label="RT >"
-            type="number"
-            size="small"
-            value={criteria.minRT}
-            onChange={handleCriteriaChange}
-            name="minRT"
-            sx={{ width: 120 }}
-          />
-          <TextField
-            label="GRT >"
-            type="number"
-            size="small"
-            value={criteria.minGRT}
-            onChange={handleCriteriaChange}
-            name="minGRT"
-            sx={{ width: 120 }}
-          />
-          <TextField
-            label="Sales GRT >"
-            type="number"
-            size="small"
-            value={criteria.minSales}
-            onChange={handleCriteriaChange}
-            name="minSales"
-            sx={{ width: 120 }}
-          />
-          <TextField
-            label="EY% >"
-            type="number"
-            size="small"
-            value={criteria.minEYPercentage}
-            onChange={handleCriteriaChange}
-            name="minEYPercentage"
-            sx={{ width: 120 }}
-          />
-          <FormControlLabel
-            control={<Checkbox checked={grtSalesFilter} onChange={(e) => setGrtSalesFilter(e.target.checked)} />}
-            label="GRT > Sales"
-          />
-        </Box>
-      </Box>
-      <Box sx={{ marginTop: 3 }}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h4" padding={1} marginLeft={-1} gutterBottom>
           Sort Selection
         </Typography>
         <Grid container spacing={2} alignItems="center">
@@ -438,7 +490,7 @@ const StockList = () => {
                 control={
                   <Checkbox
                     checked={selectedFormula === formula}
-                    onChange={() => setSelectedFormula(formula)}
+                    onChange={() => handleSelectedFormulaChange(formula)}
                   />
                 }
                 label={formula}
@@ -447,30 +499,11 @@ const StockList = () => {
           ))}
         </Grid>
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
-        <Button onClick={() => handleCountryClick('USA')} sx={{ border: isSelectedCountry('USA') ? '2px solid blue' : 'none' }}>
-          <img src={USA} alt="USA" style={{ width: '100px', height: '60px' }} />
-        </Button>
-        <Button onClick={() => handleCountryClick('Europe')} sx={{ border: isSelectedCountry('Europe') ? '2px solid blue' : 'none' }}>
-          <img src={Europe} alt="Europe" style={{ width: '100px', height: '60px' }} />
-        </Button>
-        <Button onClick={() => handleCountryClick('Canada')} sx={{ border: isSelectedCountry('Canada') ? '2px solid blue' : 'none' }}>
-          <img src={Canada} alt="Canada" style={{  width: '100px', height: '60px' }} />
-        </Button>
-        <Button onClick={() => handleCountryClick('Australia')} sx={{ border: isSelectedCountry('Australia') ? '2px solid blue' : 'none' }}>
-          <img src={Australia} alt="Australia" style={{  width: '100px', height: '60px' }} />
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 3 }}>
-        <Button variant="contained" onClick={() => handleCountryClick('All')}>
-          Show All Countries
-        </Button>
-      </Box>
       <Box sx={{ height: 600, marginTop: 3 }}>
-        <DataGrid 
-          rows={filteredStocks} 
-          columns={columns} 
-          pageSize={10} 
+        <DataGrid
+          rows={filteredStocks}
+          columns={columns}
+          pageSize={10}
           sx={{
             '& .MuiDataGrid-root': {
               backgroundColor: '#e3f2fd',
@@ -487,7 +520,7 @@ const StockList = () => {
               fontSize: '16px',
             },
             '& .MuiDataGrid-footerContainer': {
-              backgroundColor: '#0d47a1',
+              backgroundColor: '#ee0979',
               color: '#fff',
             }
           }}
@@ -528,17 +561,30 @@ const StockList = () => {
               <TextField margin="dense" name="ci" label="CI" type="number" fullWidth value={formData.ci} onChange={handleChange} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                margin="dense"
-                name="country"
-                label="Country"
-                fullWidth
-                value={formData.country}
-                InputProps={{
-                  readOnly: true,
-                }}
-                onChange={handleChange}
-              />
+              <Typography variant="body2" sx={{ marginTop: 2 }}>
+                Select Country:
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', marginTop: 1 }}>
+                {countries.map((country) => (
+                  <Tooltip title={country.name} key={country.name}>
+                    <Button
+                      onClick={() => setFormData({ ...formData, country: country.name })}
+                      sx={{
+                        border: formData.country === country.name ? '3px solid blue' : 'none',
+                        borderRadius: '25px',
+                        padding: '0',
+                        minWidth: 'auto'
+                      }}
+                    >
+                      <Avatar
+                        src={country.flag}
+                        alt={country.name}
+                        sx={{ width: 40, height: 40 }}
+                      />
+                    </Button>
+                  </Tooltip>
+                ))}
+              </Box>
             </Grid>
           </Grid>
         </DialogContent>
