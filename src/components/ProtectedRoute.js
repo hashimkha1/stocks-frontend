@@ -5,7 +5,12 @@ import { AuthContext } from '../context/AuthContext';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useContext(AuthContext);
 
-  return authenticated ? children : <Navigate to="/stocks" />;
+  if (authenticated === null) {
+    // Optionally, show a loading indicator while checking authentication
+    return <div>Loading...</div>;
+  }
+
+  return authenticated ? children : <Navigate to="/stocks/home" />;
 };
 
 export default ProtectedRoute;

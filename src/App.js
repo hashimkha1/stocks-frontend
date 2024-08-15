@@ -14,13 +14,13 @@ const App = () => {
         <NavBar />
         <Routes>
           <Route path="/stocks" element={<Login />} />
-          <Route path="/change-password" element={
+          <Route path="/stocks/change-password" element={
             <ProtectedRoute>
               <ChangePassword />
             </ProtectedRoute>
           } />
-          <Route path="/home" element={
-            <ProtectedRoute>
+          <Route path="/stocks/home" element={
+           <ProtectedRoute>
               <StockList />
             </ProtectedRoute>
           } />

@@ -8,7 +8,7 @@ const NavBar = ({ countryFlag }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setAuthenticated(false);
+   
     navigate('/stocks');
   };
 
@@ -23,16 +23,16 @@ const NavBar = ({ countryFlag }) => {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1, paddingLeft: 15 }}>
           
         </Typography>
-        {authenticated && (
+        {/* {authenticated && ( */}
           <>
-            <Button color="inherit" component={Link} to="/change-password">
+            <Button color="inherit" component={Link} to="/stocks/change-password">
               Change Password
             </Button>
             <Button color="inherit" onClick={handleLogout}>
               Logout
             </Button>
           </>
-        )}
+        {/* )} */}
       </Toolbar>
     </AppBar>
   );

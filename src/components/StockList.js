@@ -72,14 +72,16 @@ const StockList = () => {
   const [formData, setFormData] = useState({
     ticker: '',
     description: '',
-    rs: 0,
-    rv: 0,
-    ci: 0,
-    rt: 0,
-    grt: 0,
-    sales: 0,
-    ey_percentage: 0,
-    country: ''
+    rs: '',
+    rv: '',
+    ci: '',
+    rt: '',
+    grt: '',
+    sales: '',
+    ey_percentage: '',
+    country: '',
+    owned: false,
+    wl: false
   });
   const [selectedStock, setSelectedStock] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -89,6 +91,8 @@ const StockList = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [countryFlag, setCountryFlag] = useState(null);
+  const [showOwnedOnly, setShowOwnedOnly] = useState(false);
+  const [showWLOnly, setShowWLOnly] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -98,7 +102,7 @@ const StockList = () => {
     if (stocks.length > 0) {
       applyFiltersAndSorting();
     }
-  }, [criteria, displayResults, selectedFormula, salesGRTFilter, ignoreFilters, stocks, selectedCountry]);
+  }, [criteria, displayResults, selectedFormula, salesGRTFilter, ignoreFilters, stocks, selectedCountry, showOwnedOnly, showWLOnly]);
 
   const fetchData = () => {
     axios.get('https://discipleshiptrails.com/backend/api/stocks/')
@@ -136,27 +140,33 @@ const StockList = () => {
       filtered = filtered.filter(stock => stock.country === selectedCountry);
     }
 
-    if (!ignoreFilters) {
+    if (showOwnedOnly) {
+      filtered = filtered.filter(stock => stock.owned);
+    }
+
+    if (showWLOnly) {
+      filtered = filtered.filter(stock => stock.wl);
+    } else if (!ignoreFilters) {
       if (criteria.minRS !== '') {
-        filtered = filtered.filter(stock => stock.rs > parseFloat(criteria.minRS));
+        filtered = filtered.filter(stock => stock.rs >= parseFloat(criteria.minRS));
       }
       if (criteria.minRV !== '') {
-        filtered = filtered.filter(stock => stock.rv > parseFloat(criteria.minRV));
+        filtered = filtered.filter(stock => stock.rv >= parseFloat(criteria.minRV));
       }
       if (criteria.minCI !== '') {
-        filtered = filtered.filter(stock => stock.ci > parseFloat(criteria.minCI));
+        filtered = filtered.filter(stock => stock.ci >= parseFloat(criteria.minCI));
       }
       if (criteria.minRT !== '') {
-        filtered = filtered.filter(stock => stock.rt > parseFloat(criteria.minRT));
+        filtered = filtered.filter(stock => stock.rt >= parseFloat(criteria.minRT));
       }
       if (criteria.minGRT !== '') {
-        filtered = filtered.filter(stock => stock.grt > parseFloat(criteria.minGRT));
+        filtered = filtered.filter(stock => stock.grt >= parseFloat(criteria.minGRT));
       }
       if (criteria.minSales !== '') {
-        filtered = filtered.filter(stock => stock.sales > parseFloat(criteria.minSales));
+        filtered = filtered.filter(stock => stock.sales >= parseFloat(criteria.minSales));
       }
       if (criteria.minEYPercentage !== '') {
-        filtered = filtered.filter(stock => stock.ey_percentage > parseFloat(criteria.minEYPercentage));
+        filtered = filtered.filter(stock => stock.ey_percentage >= parseFloat(criteria.minEYPercentage));
       }
       if (salesGRTFilter) {
         filtered = filtered.filter(stock => stock.sales > stock.grt);
@@ -179,14 +189,16 @@ const StockList = () => {
     setFormData({
       ticker: '',
       description: '',
-      rs: 0,
-      rv: 0,
-      ci: 0,
-      rt: 0,
-      grt: 0,
-      sales: 0,
-      ey_percentage: 0,
-      country: selectedCountry !== 'All' ? selectedCountry : ''
+      rs: '',
+      rv: '',
+      ci: '',
+      rt: '',
+      grt: '',
+      sales: '',
+      ey_percentage: '',
+      country: selectedCountry !== 'All' ? selectedCountry : '',
+      owned: false,
+      wl: false
     });
   };
 
@@ -197,6 +209,11 @@ const StockList = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData({ ...formData, [name]: checked });
   };
 
   const handleCriteriaChange = (e) => {
@@ -222,10 +239,29 @@ const StockList = () => {
     }
   };
 
+  const handleOwnedCheckboxChange = (e) => {
+    setShowOwnedOnly(e.target.checked);
+  };
+
+  const handleWLCheckboxChange = (e) => {
+    setShowWLOnly(e.target.checked);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const dataToSubmit = {
+      ...formData,
+      rs: formData.rs === '' ? 0 : formData.rs,
+      rv: formData.rv === '' ? 0 : formData.rv,
+      ci: formData.ci === '' ? 0 : formData.ci,
+      rt: formData.rt === '' ? 0 : formData.rt,
+      grt: formData.grt === '' ? 0 : formData.grt,
+      sales: formData.sales === '' ? 0 : formData.sales,
+      ey_percentage: formData.ey_percentage === '' ? 0 : formData.ey_percentage,
+    };
+
     if (selectedStock) {
-      axios.put(`https://discipleshiptrails.com/backend/api/stocks/${selectedStock.id}/`, formData)
+      axios.put(`https://discipleshiptrails.com/backend/api/stocks/${selectedStock.id}/`, dataToSubmit)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -240,7 +276,7 @@ const StockList = () => {
           setSnackbarOpen(true);
         });
     } else {
-      axios.post('https://discipleshiptrails.com/backend/api/stocks/', formData)
+      axios.post('https://discipleshiptrails.com/backend/api/stocks/', dataToSubmit)
         .then(response => {
           fetchData();
           setOpen(false);
@@ -288,7 +324,6 @@ const StockList = () => {
   const handleCountryClick = (country) => {
     setSelectedCountry(country.name);
     setCountryFlag(country.flag);
-    setIgnoreFilters(false);
   };
 
   const columns = [
@@ -302,28 +337,45 @@ const StockList = () => {
     { field: 'grt', headerName: 'GRT', flex: 1 },
     { field: 'sales', headerName: 'Sales GRT', flex: 1 },
     { field: 'ey_percentage', headerName: 'EY%', flex: 1 },
-    { 
-      field: 'actions', 
-      headerName: 'Actions', 
-      flex: 1, 
+    {
+      field: 'wl',
+      headerName: 'WL',
+      flex: 1,
+      renderCell: (params) => (
+        <Checkbox
+          checked={params.row.wl}
+          onChange={(e) => {
+            const updatedStock = { ...params.row, wl: e.target.checked };
+            axios.put(`https://discipleshiptrails.com/backend/api/stocks/${params.row.id}/`, updatedStock)
+              .then(() => fetchData())
+              .catch(error => console.error(error));
+          }}
+        />
+      )
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      flex: 1,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-          <IconButton 
+          <IconButton
             color="error"
             onClick={() => handleDeleteIconClick(params.row)}
           >
             <DeleteIcon />
           </IconButton>
-          <IconButton 
+          <IconButton
             color="primary"
             onClick={() => handleEditIconClick(params.row)}
           >
             <EditIcon />
           </IconButton>
         </Box>
-      ) 
+      )
     },
   ];
+
   const isSelectedCountry = (country) => selectedCountry === country.name;
 
   return (
@@ -337,14 +389,14 @@ const StockList = () => {
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#f0f4c3' }}>
             <Typography variant="h6">
-              Total Stocks:{stocks.length}
+              Total Stocks: {stocks.length}
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} sm={4}>
           <Paper sx={{ padding: 2, textAlign: 'center', backgroundColor: '#e1bee7' }}>
             <Typography variant="h6">
-              Results Meeting Criteria :  {filteredStocks.length}
+              Results Meeting Criteria: {filteredStocks.length}
             </Typography>
           </Paper>
         </Grid>
@@ -372,7 +424,7 @@ const StockList = () => {
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               <TextField
-                label="RS >"
+                label="RS >="
                 type="number"
                 size="small"
                 value={criteria.minRS}
@@ -381,7 +433,7 @@ const StockList = () => {
                 sx={{ width: 120 }}
               />
               <TextField
-                label="RV >"
+                label="RV >="
                 type="number"
                 size="small"
                 value={criteria.minRV}
@@ -390,7 +442,7 @@ const StockList = () => {
                 sx={{ width: 120 }}
               />
               <TextField
-                label="CI >"
+                label="CI >="
                 type="number"
                 size="small"
                 value={criteria.minCI}
@@ -399,7 +451,7 @@ const StockList = () => {
                 sx={{ width: 120 }}
               />
               <TextField
-                label="RT >"
+                label="RT >="
                 type="number"
                 size="small"
                 value={criteria.minRT}
@@ -408,7 +460,7 @@ const StockList = () => {
                 sx={{ width: 120 }}
               />
               <TextField
-                label="GRT >"
+                label="GRT >="
                 type="number"
                 size="small"
                 value={criteria.minGRT}
@@ -417,7 +469,7 @@ const StockList = () => {
                 sx={{ width: 120 }}
               />
               <TextField
-                label="Sales GRT >"
+                label="Sales GRT >="
                 type="number"
                 size="small"
                 value={criteria.minSales}
@@ -426,7 +478,7 @@ const StockList = () => {
                 sx={{ width: 120 }}
               />
               <TextField
-                label="EY% >"
+                label="EY% >="
                 type="number"
                 size="small"
                 value={criteria.minEYPercentage}
@@ -442,15 +494,22 @@ const StockList = () => {
                 control={<Checkbox checked={ignoreFilters} onChange={handleIgnoreFiltersChange} />}
                 label="Ignore Filters"
               />
+              <FormControlLabel
+                control={<Checkbox checked={showOwnedOnly} onChange={handleOwnedCheckboxChange} />}
+                label="Owned"
+              />
+              <FormControlLabel
+                control={<Checkbox checked={showWLOnly} onChange={handleWLCheckboxChange} />}
+                label="WL"
+              />
             </Box>
           </Box>
         </Grid>
         <Grid item xs={12} sm={4}>
           <Box>
             <Typography variant="h4" padding={2} gutterBottom>
-              
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' ,marginTop: '57px'}}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', marginTop: '56px' }}>
               {countries.map((country) => (
                 <Tooltip title={country.name} key={country.name}>
                   <Button
@@ -559,6 +618,28 @@ const StockList = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField margin="dense" name="ci" label="CI" type="number" fullWidth value={formData.ci} onChange={handleChange} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="owned"
+                    checked={formData.owned}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label="Owned"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="wl"
+                    checked={formData.wl}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label="WL"
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" sx={{ marginTop: 2 }}>
